@@ -1,0 +1,25 @@
+.main {
+
+    background-color:#F7F9FC;
+
+}
+
+.block-container{
+
+    padding-top:2rem;
+
+}
+
+h1{
+
+    color:#003366;
+
+}
+
+.stButton>button{
+
+    width:100%;
+
+    border-radius:8px;
+
+}
