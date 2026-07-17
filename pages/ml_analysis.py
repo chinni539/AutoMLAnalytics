@@ -62,7 +62,8 @@ def show():
         0.1,
         0.5,
         0.2,
-        0.05
+        0.05,
+        0.75
     )
 
     random_state = st.sidebar.number_input(
