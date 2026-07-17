@@ -12,7 +12,9 @@ class VisualizationService:
     @staticmethod
     def get_categorical_columns(df):
         """Return categorical columns."""
-        return df.select_dtypes(include=["object", "category"]).columns.tolist()
+        return df.select_dtypes(
+            include=["object", "category"]
+        ).columns.tolist()
 
     @staticmethod
     def histogram(df):
@@ -23,8 +25,8 @@ class VisualizationService:
 
         return px.histogram(
             df,
-            x=numeric[0],
-            title=f"Distribution of {numeric[0]}"
+            x=numeric[5].sum(),
+            title=f"Distribution of {numeric[5]}"
         )
 
     @staticmethod
@@ -45,21 +47,24 @@ class VisualizationService:
     def bar_chart(df):
         cat = VisualizationService.get_categorical_columns(df)
         num = VisualizationService.get_numeric_columns(df)
+        
+        print("Categorical:", cat)
+        print("Numeric:", num)
 
         if not cat or not num:
             return None
 
         grouped = (
-            df.groupby(cat[0])[num[0]]
-            .mean()
+            df.groupby(cat[0])[num[5]]
+            .sum()
             .reset_index()
         )
 
         return px.bar(
             grouped,
             x=cat[0],
-            y=num[0],
-            title=f"Average {num[0]} by {cat[0]}"
+            y=num[5],
+            title=f"Average {num[5]} by {cat[0]}"
         )
 
     @staticmethod
@@ -186,18 +191,63 @@ class VisualizationService:
     ):
         """
         Dynamically build Plotly charts.
+
+        Numeric Y-axis:
+            Aggregate using SUM
+
+        Categorical Y-axis:
+            Aggregate using COUNT
         """
 
+        chart_df = df.copy()
+
+        # ==============================
+        # BAR CHART AGGREGATION
+        # ==============================
+        if chart_type == "Bar" and y is not None:
+
+            group_cols = [x]
+
+            if color:
+                group_cols.append(color)
+
+            # Numeric -> SUM
+            if pd.api.types.is_numeric_dtype(chart_df[y]):
+
+                chart_df = (
+                    chart_df
+                    .groupby(group_cols, as_index=False)[y]
+                    .sum()
+                )
+
+            # Categorical -> COUNT
+            else:
+
+                chart_df = (
+                    chart_df
+                    .groupby(group_cols)[y]
+                    .count()
+                    .reset_index(name=f"{y}_count")
+                )
+
+                y = f"{y}_count"
+
+        # ==============================
+        # BAR
+        # ==============================
         if chart_type == "Bar":
 
             return px.bar(
-                df,
+                chart_df,
                 x=x,
                 y=y,
                 color=color,
                 title="Bar Chart"
             )
 
+        # ==============================
+        # LINE
+        # ==============================
         elif chart_type == "Line":
 
             return px.line(
@@ -208,6 +258,9 @@ class VisualizationService:
                 title="Line Chart"
             )
 
+        # ==============================
+        # SCATTER
+        # ==============================
         elif chart_type == "Scatter":
 
             return px.scatter(
@@ -218,6 +271,9 @@ class VisualizationService:
                 title="Scatter Plot"
             )
 
+        # ==============================
+        # HISTOGRAM
+        # ==============================
         elif chart_type == "Histogram":
 
             return px.histogram(
@@ -227,7 +283,46 @@ class VisualizationService:
                 title="Histogram"
             )
 
+        # ==============================
+        # PIE
+        # ==============================
         elif chart_type == "Pie":
+
+            if y is not None:
+
+                # Numeric -> SUM
+                if pd.api.types.is_numeric_dtype(df[y]):
+
+                    pie_df = (
+                        df.groupby(
+                            x,
+                            as_index=False
+                        )[y]
+                        .sum()
+                    )
+
+                    return px.pie(
+                        pie_df,
+                        names=x,
+                        values=y,
+                        title=f"Sum of {y} by {x}"
+                    )
+
+                # Categorical -> COUNT
+                else:
+
+                    pie_df = (
+                        df.groupby(x)[y]
+                        .count()
+                        .reset_index(name="Count")
+                    )
+
+                    return px.pie(
+                        pie_df,
+                        names=x,
+                        values="Count",
+                        title=f"Count of {y} by {x}"
+                    )
 
             return px.pie(
                 df,
@@ -235,6 +330,9 @@ class VisualizationService:
                 title="Pie Chart"
             )
 
+        # ==============================
+        # BOX
+        # ==============================
         elif chart_type == "Box":
 
             return px.box(
@@ -245,6 +343,9 @@ class VisualizationService:
                 title="Box Plot"
             )
 
+        # ==============================
+        # VIOLIN
+        # ==============================
         elif chart_type == "Violin":
 
             return px.violin(
@@ -256,6 +357,9 @@ class VisualizationService:
                 title="Violin Plot"
             )
 
+        # ==============================
+        # AREA
+        # ==============================
         elif chart_type == "Area":
 
             return px.area(
@@ -266,5 +370,4 @@ class VisualizationService:
                 title="Area Chart"
             )
 
-        else:
-            return None
+        return None

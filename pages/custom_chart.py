@@ -16,6 +16,7 @@ def show():
         return
 
     df = st.session_state.data
+    #print(df.head())
 
     st.sidebar.subheader("Chart Configuration")
 
