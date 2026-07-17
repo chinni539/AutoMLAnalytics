@@ -25,7 +25,7 @@ class VisualizationService:
 
         return px.histogram(
             df,
-            x=numeric[5].sum(),
+            x=numeric[5],
             title=f"Distribution of {numeric[5]}"
         )
 
