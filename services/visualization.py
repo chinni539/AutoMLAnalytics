@@ -25,8 +25,8 @@ class VisualizationService:
 
         return px.histogram(
             df,
-            x=numeric[5],
-            title=f"Distribution of {numeric[5]}"
+            x=numeric[0],
+            title=f"Distribution of {numeric[0]}"
         )
 
     @staticmethod
